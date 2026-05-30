@@ -94,6 +94,7 @@ body{font-family:-apple-system,'Noto Sans TC',sans-serif;background:var(--bg);co
 <script>
 const API_URL= + API_URL + ;
 const TC={'中信兄弟':'#FFCE00','統一獅':'#F47A20','樂天桃猿':'#9E1B32','富邦悍將':'#0B3B60','味全龍':'#E1251B','台鋼雄鷹':'#0C6C4F'};
+
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function age(b){
   if(!b)return'';
@@ -126,6 +127,7 @@ function card(p){
   const lastRowHtml=lastRow?`<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px">${lastRow}</div>`:'';
   return`<div class="card"><div class="card-accent" style="background:${col}"></div><div class="card-top"><div class="jersey">${esc(p.j)}</div>${mbadge}</div>${nm}${sub}${metaHtml}${tagsHtml}${lastRowHtml}</div>`;
 }
+
 let PLAYERS=[],cTeam='',cFilter='',cQ='';
 function render(){
   const q=cQ.toLowerCase().trim();
@@ -153,13 +155,28 @@ document.querySelectorAll('.btn-wide').forEach(b=>b.addEventListener('click',()=
   cFilter=b.dataset.filter||'';render();
 }));
 document.getElementById('searchInput').addEventListener('input',function(){cQ=this.value;render();});
-fetch(API_URL)
-  .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-  .then(data=>{PLAYERS=data;document.getElementById('searchInput').disabled=false;render();})
-  .catch(err=>{
-    document.getElementById('cardsGrid').innerHTML=`<div class="error">❌ 載入失敗：${esc(err.message)}</div>`;
+
+// JSONP 載入（繞過 CORS，支援所有裝置）
+function cpblData(data){
+  PLAYERS=data;
+  document.getElementById('searchInput').disabled=false;
+  render();
+}
+(function loadData(){
+  const s=document.createElement('script');
+  s.src=API_URL+'?callback=cpblData&_='+Date.now();
+  s.onerror=function(){
+    document.getElementById('cardsGrid').innerHTML='<div class="error">❌ 無法載入資料，請稍後再試</div>';
     document.getElementById('statsBar').textContent='';
-  });
+  };
+  document.head.appendChild(s);
+  setTimeout(function(){
+    if(!PLAYERS.length){
+      document.getElementById('cardsGrid').innerHTML='<div class="error">⏱ 載入逾時，請重新整理頁面</div>';
+      document.getElementById('statsBar').textContent='';
+    }
+  },15000);
+})();
 </script>
 </body>
 </html>
