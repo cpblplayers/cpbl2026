@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPBL 2026 球員查詢</title>
+<style>
+:root{
+  --bg:#f0f2f5;--card:#fff;--text:#1a1a2e;--sub:#666;--border:#e0e3ea;
+  --badge:#efefef;
+  --tribe-bg:#e8f4e8;--tribe-c:#2a7a2a;
+  --quit-bg:#fde8e8;--quit-c:#b91c1c;
+  --mem-bg:#eaf0fb;--mem-c:#1a4a9a;
+  --board-bg:#fef3e2;--board-c:#92400e;
+  --note-bg:#f5f5f5;--note-c:#666;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.site-header{background:#0d0d1a;padding:18px 16px 14px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.35)}
+.site-header h1{color:#fff;font-size:1.1rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.site-header p{color:rgba(255,255,255,.45);font-size:.7rem;margin-top:2px}
+.search-wrap{padding:14px 14px 0}
+.search-wrap input{width:100%;padding:11px 16px;border:1.5px solid var(--border);border-radius:50px;font-size:.95rem;background:#fff;color:var(--text);outline:none;transition:border-color .2s}
+.search-wrap input:focus{border-color:#666}
+.team-wrap{padding:12px 14px 0}
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:7px}
+.row-full{display:flex;gap:7px}
+.team-btn{border:none;border-radius:50px;padding:9px 4px;font-size:.8rem;font-weight:700;color:#fff;cursor:pointer;transition:opacity .15s,transform .1s;white-space:nowrap}
+.team-btn:active{transform:scale(.96)}
+.team-btn.active{box-shadow:0 0 0 2.5px #fff,0 0 0 5px rgba(0,0,0,.3)}
+.btn-wide{flex:1;border:2px solid transparent;border-radius:50px;padding:10px;font-size:.8rem;font-weight:700;color:#fff;cursor:pointer;transition:all .15s;opacity:.75}
+.btn-wide:hover{opacity:1}
+.btn-all{background:#1a1a2e}.btn-union{background:#1a4a9a}.btn-board{background:#92400e}
+.btn-wide.active{opacity:1;border-color:#fff;box-shadow:0 0 0 3px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.4);transform:scale(1.04);letter-spacing:.04em}
+.stats-bar{padding:10px 16px 2px;font-size:.78rem;color:var(--sub);font-weight:500}
+.cards-grid{padding:10px 14px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
+.card{background:var(--card);border-radius:var(--r);border:1.5px solid var(--border);padding:13px 12px 11px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:box-shadow .15s}
+.card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.card-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px}
+.jersey{font-size:1.5rem;font-weight:900;line-height:1;color:var(--text);font-variant-numeric:tabular-nums}
+.pos-badge{font-size:.63rem;font-weight:700;background:var(--badge);color:#444;padding:2px 6px;border-radius:50px;margin-top:3px;white-space:nowrap}
+.mem-badge{background:var(--board-bg);color:var(--board-c)}
+.mem-badge-mem{background:var(--mem-bg);color:var(--mem-c)}
+.player-name{font-size:.98rem;font-weight:800;color:var(--text);text-decoration:none;display:block;line-height:1.2;margin-bottom:2px}
+.player-name:hover{text-decoration:underline}
+.player-name.no-link{cursor:default}
+.player-sub{font-size:.68rem;color:#999;font-weight:500;margin-bottom:5px}
+.card-meta{font-size:.7rem;color:var(--sub);line-height:1.65}
+.card-meta span{display:block}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.tag{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:50px}
+.tag-tribe{background:var(--tribe-bg);color:var(--tribe-c)}
+.tag-quit{background:var(--quit-bg);color:var(--quit-c)}
+.tag-note{background:var(--note-bg);color:var(--note-c);font-weight:500}
+.wiki-link{font-size:.63rem;color:#aaa;text-decoration:none}
+.wiki-link:hover{color:#444}
+.loading{grid-column:1/-1;text-align:center;padding:60px 16px;color:var(--sub)}
+.loading .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:#555;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty,.error{grid-column:1/-1;text-align:center;padding:48px 16px;font-size:.9rem;line-height:1.8}
+.error{color:#b91c1c}
+@media(min-width:640px){.cards-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <h1>CPBL 2026 球員資料庫</h1>
+  <p>台北市職業棒球員職業工會</p>
+</header>
+<div class="search-wrap">
+  <input type="search" id="searchInput" placeholder="搜尋姓名、背號、位置、經紀人…" autocomplete="off" disabled>
+</div>
+<div class="team-wrap">
+  <div class="row-full">
+    <button class="btn-wide btn-all active" data-team="" data-filter="">全部球隊</button>
+    <button class="btn-wide btn-union" data-filter="union">工會會員</button>
+    <button class="btn-wide btn-board" data-filter="board">理監事</button>
+  </div>
+  <div class="team-grid">
+    <button class="team-btn" style="background:#FFCE00;color:#222" data-team="中信兄弟">中信兄弟</button>
+    <button class="team-btn" style="background:#F47A20" data-team="統一獅">統一獅</button>
+    <button class="team-btn" style="background:#9E1B32" data-team="樂天桃猿">樂天桃猿</button>
+    <button class="team-btn" style="background:#0B3B60" data-team="富邦悍將">富邦悍將</button>
+    <button class="team-btn" style="background:#E1251B" data-team="味全龍">味全龍</button>
+    <button class="team-btn" style="background:#0C6C4F" data-team="台鋼雄鷹">台鋼雄鷹</button>
+  </div>
+</div>
+<div class="stats-bar" id="statsBar"></div>
+<div class="cards-grid" id="cardsGrid">
+  <div class="loading"><div class="spinner"></div>正在載入球員資料…</div>
+</div>
+<script>
+const API_URL= + API_URL + ;
+const TC={'中信兄弟':'#FFCE00','統一獅':'#F47A20','樂天桃猿':'#9E1B32','富邦悍將':'#0B3B60','味全龍':'#E1251B','台鋼雄鷹':'#0C6C4F'};
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function age(b){
+  if(!b)return'';
+  const[y,mo,d]=b.split('/').map(Number);
+  const n=new Date();let a=n.getFullYear()-y;
+  if(n.getMonth()+1<mo||(n.getMonth()+1===mo&&n.getDate()<d))a--;
+  return a;
+}
+function card(p){
+  const col=TC[p.t]||'#333';
+  const nm=p.u?`<a class="player-name" href="${esc(p.u)}" target="_blank" rel="noopener">${esc(p.n)}</a>`
+              :`<span class="player-name no-link">${esc(p.n)}</span>`;
+  const sub=`<div class="player-sub">${esc(p.t)} · ${esc(p.p)}</div>`;
+  let meta='';
+  if(p.b){const a=age(p.b);meta+=`<span>生日 ${esc(p.b)}${a!==''?` (${a}歲)`:''}</span>`;}
+  if(p.e)meta+=`<span>${esc(p.e)}</span>`;
+  const metaHtml=meta?`<div class="card-meta">${meta}</div>`:'';
+  let tags='';
+  if(p.x){
+    tags+=`<span class="tag tag-quit">曾退工會</span>`;
+    if(p.x!=='退工會')tags+=`<span class="tag tag-note">${esc(p.x)}</span>`;
+  }
+  const tagsHtml=tags?`<div class="tags">${tags}</div>`:'';
+  const mbcls=p.m==='會員'?'pos-badge mem-badge-mem':'pos-badge mem-badge';
+  const mbadge=`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;margin-top:3px">${p.m?`<span class="${mbcls}">${esc(p.m)}</span>`:''}</div>`;
+  let lastRow='';
+  if(p.r)lastRow+=`<span class="tag tag-tribe" style="font-size:.58rem;padding:1px 5px">${esc(p.r)}</span>`;
+  if(p.g)lastRow+=`<span style="font-size:.63rem;color:#888">${esc(p.g)}</span>`;
+  if(p.w)lastRow+=`<a class="wiki-link" href="https://zh.wikipedia.org/wiki/${encodeURIComponent(p.w)}" target="_blank">Wiki ↗</a>`;
+  const lastRowHtml=lastRow?`<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px">${lastRow}</div>`:'';
+  return`<div class="card"><div class="card-accent" style="background:${col}"></div><div class="card-top"><div class="jersey">${esc(p.j)}</div>${mbadge}</div>${nm}${sub}${metaHtml}${tagsHtml}${lastRowHtml}</div>`;
+}
+
+let PLAYERS=[],cTeam='',cFilter='',cQ='';
+function render(){
+  const q=cQ.toLowerCase().trim();
+  const list=PLAYERS.filter(p=>{
+    if(cTeam&&p.t!==cTeam)return false;
+    if(cFilter==='union'&&!p.m)return false;
+    if(cFilter==='board'&&(!p.m||p.m==='會員'))return false;
+    if(!q)return true;
+    return p.n.includes(q)||p.j.includes(q)||p.p.includes(q)||p.t.includes(q)||p.r.includes(q)||p.m.includes(q)||(p.g&&p.g.includes(q));
+  });
+  const g=document.getElementById('cardsGrid');
+  const s=document.getElementById('statsBar');
+  if(!list.length){g.innerHTML=PLAYERS.length?'<div class="empty">查無球員資料</div>':'';s.textContent='';return;}
+  const lbl=cFilter==='union'?'工會會員':cFilter==='board'?'理監事':cTeam||'全部球隊';
+  s.textContent=`${lbl}　共 ${list.length} 人`;
+  g.innerHTML=list.map(card).join('');
+}
+function clearA(){document.querySelectorAll('.team-btn,.btn-wide').forEach(b=>b.classList.remove('active'))}
+document.querySelectorAll('.team-btn').forEach(b=>b.addEventListener('click',()=>{
+  clearA();b.classList.add('active');cTeam=b.dataset.team;cFilter='';render();
+}));
+document.querySelectorAll('.btn-wide').forEach(b=>b.addEventListener('click',()=>{
+  clearA();b.classList.add('active');
+  cTeam=b.dataset.team!=null?b.dataset.team:'';
+  cFilter=b.dataset.filter||'';render();
+}));
+document.getElementById('searchInput').addEventListener('input',function(){cQ=this.value;render();});
+
+// JSONP 載入（繞過 CORS，支援所有裝置）
+function cpblData(data){
+  PLAYERS=data;
+  document.getElementById('searchInput').disabled=false;
+  render();
+}
+(function loadData(){
+  const s=document.createElement('script');
+  s.src=API_URL+'?callback=cpblData&_='+Date.now();
+  s.onerror=function(){
+    document.getElementById('cardsGrid').innerHTML='<div class="error">❌ 無法載入資料，請稍後再試</div>';
+    document.getElementById('statsBar').textContent='';
+  };
+  document.head.appendChild(s);
+  setTimeout(function(){
+    if(!PLAYERS.length){
+      document.getElementById('cardsGrid').innerHTML='<div class="error">⏱ 載入逾時，請重新整理頁面</div>';
+      document.getElementById('statsBar').textContent='';
+    }
+  },15000);
+})();
+</script>
+</body>
+</html>
