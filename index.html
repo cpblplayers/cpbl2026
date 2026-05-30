@@ -92,8 +92,25 @@ body{font-family:-apple-system,'Noto Sans TC',sans-serif;background:var(--bg);co
   <div class="loading"><div class="spinner"></div>正在載入球員資料…</div>
 </div>
 <script>
-const API_URL= + API_URL + ;
+const CSV_URL= + CSV_URL + ;
 const TC={'中信兄弟':'#FFCE00','統一獅':'#F47A20','樂天桃猿':'#9E1B32','富邦悍將':'#0B3B60','味全龍':'#E1251B','台鋼雄鷹':'#0C6C4F'};
+
+// CSV parser
+function parseCSV(text){
+  const rows=[];
+  for(const line of text.split(/\r?\n/)){
+    if(!line.trim())continue;
+    const row=[];let f='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){if(inQ&&line[i+1]==='"'){f+='"';i++;}else inQ=!inQ;}
+      else if(c===','&&!inQ){row.push(f);f='';}
+      else f+=c;
+    }
+    row.push(f);rows.push(row);
+  }
+  return rows;
+}
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function age(b){
@@ -113,10 +130,7 @@ function card(p){
   if(p.e)meta+=`<span>${esc(p.e)}</span>`;
   const metaHtml=meta?`<div class="card-meta">${meta}</div>`:'';
   let tags='';
-  if(p.x){
-    tags+=`<span class="tag tag-quit">曾退工會</span>`;
-    if(p.x!=='退工會')tags+=`<span class="tag tag-note">${esc(p.x)}</span>`;
-  }
+  if(p.x){tags+=`<span class="tag tag-quit">曾退工會</span>`;if(p.x!=='退工會')tags+=`<span class="tag tag-note">${esc(p.x)}</span>`;}
   const tagsHtml=tags?`<div class="tags">${tags}</div>`:'';
   const mbcls=p.m==='會員'?'pos-badge mem-badge-mem':'pos-badge mem-badge';
   const mbadge=`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;margin-top:3px">${p.m?`<span class="${mbcls}">${esc(p.m)}</span>`:''}</div>`;
@@ -138,45 +152,44 @@ function render(){
     if(!q)return true;
     return p.n.includes(q)||p.j.includes(q)||p.p.includes(q)||p.t.includes(q)||p.r.includes(q)||p.m.includes(q)||(p.g&&p.g.includes(q));
   });
-  const g=document.getElementById('cardsGrid');
-  const s=document.getElementById('statsBar');
+  const g=document.getElementById('cardsGrid'),s=document.getElementById('statsBar');
   if(!list.length){g.innerHTML=PLAYERS.length?'<div class="empty">查無球員資料</div>':'';s.textContent='';return;}
   const lbl=cFilter==='union'?'工會會員':cFilter==='board'?'理監事':cTeam||'全部球隊';
   s.textContent=`${lbl}　共 ${list.length} 人`;
   g.innerHTML=list.map(card).join('');
 }
 function clearA(){document.querySelectorAll('.team-btn,.btn-wide').forEach(b=>b.classList.remove('active'))}
-document.querySelectorAll('.team-btn').forEach(b=>b.addEventListener('click',()=>{
-  clearA();b.classList.add('active');cTeam=b.dataset.team;cFilter='';render();
-}));
-document.querySelectorAll('.btn-wide').forEach(b=>b.addEventListener('click',()=>{
-  clearA();b.classList.add('active');
-  cTeam=b.dataset.team!=null?b.dataset.team:'';
-  cFilter=b.dataset.filter||'';render();
-}));
+document.querySelectorAll('.team-btn').forEach(b=>b.addEventListener('click',()=>{clearA();b.classList.add('active');cTeam=b.dataset.team;cFilter='';render();}));
+document.querySelectorAll('.btn-wide').forEach(b=>b.addEventListener('click',()=>{clearA();b.classList.add('active');cTeam=b.dataset.team!=null?b.dataset.team:'';cFilter=b.dataset.filter||'';render();}));
 document.getElementById('searchInput').addEventListener('input',function(){cQ=this.value;render();});
 
-// JSONP 載入（繞過 CORS，支援所有裝置）
-function cpblData(data){
-  PLAYERS=data;
-  document.getElementById('searchInput').disabled=false;
-  render();
-}
-(function loadData(){
-  const s=document.createElement('script');
-  s.src=API_URL+'?callback=cpblData&_='+Date.now();
-  s.onerror=function(){
-    document.getElementById('cardsGrid').innerHTML='<div class="error">❌ 無法載入資料，請稍後再試</div>';
+// 從 Google Sheets GViz 端點直接抓取 CSV
+fetch(CSV_URL)
+  .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
+  .then(text=>{
+    const rows=parseCSV(text);
+    // 第一行是標題，跳過
+    PLAYERS=rows.slice(1).map(row=>{
+      if(row.length<8)return null;
+      const b=(row[4]||'').trim();
+      if(!b)return null; // 跳過教練
+      return{
+        n:(row[0]||'').trim(), j:(row[1]||'').trim(),
+        p:(row[2]||'').trim(), t:(row[3]||'').trim(),
+        b, e:(row[5]||'').trim(),
+        w:(row[6]||'').trim(), u:(row[7]||'').trim(),
+        r:(row[8]||'').trim(), s:(row[9]||'').trim(),
+        x:(row[10]||'').trim(), m:(row[11]||'').trim(),
+        g:(row[12]||'').trim(),
+      };
+    }).filter(Boolean);
+    document.getElementById('searchInput').disabled=false;
+    render();
+  })
+  .catch(err=>{
+    document.getElementById('cardsGrid').innerHTML=`<div class="error">❌ 載入失敗：${esc(err.message)}<br>請確認試算表已設為公開</div>`;
     document.getElementById('statsBar').textContent='';
-  };
-  document.head.appendChild(s);
-  setTimeout(function(){
-    if(!PLAYERS.length){
-      document.getElementById('cardsGrid').innerHTML='<div class="error">⏱ 載入逾時，請重新整理頁面</div>';
-      document.getElementById('statsBar').textContent='';
-    }
-  },15000);
-})();
+  });
 </script>
 </body>
 </html>
