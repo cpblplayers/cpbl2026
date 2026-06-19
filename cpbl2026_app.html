@@ -19,8 +19,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 #searchInput{width:100%;padding:9px 10px 9px 34px;border:1px solid #dde;border-radius:20px;font-size:14px;background:#f8f9fb;outline:none}
 #searchInput:focus{border-color:#4e9af1;background:#fff}
 
-.filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
-.filter-row::-webkit-scrollbar{display:none}
+.filter-row{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:16px;border:1.5px solid #dde;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;background:#fff;transition:.15s;user-select:none}
 .chip.active{color:#fff!important;border-color:transparent}
 
@@ -36,9 +35,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 .chip-bm.active{background:#7c3aed}
 .chip-um.active{background:#0891b2}
 .chip-coach.active{background:#78716c}
+.chip-foreign.active{background:#be185d}
 .chip-noag.active{background:#d97706}
 
-.filter-row2{margin-top:6px}
 
 .result-count{padding:6px 14px;font-size:12px;color:#666;background:#f2f4f7}
 
@@ -164,12 +163,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
       <div class="chip chip-fb" data-filter="team" data-val="富邦悍將" style="color:#0047AB">富邦悍將</div>
       <div class="chip chip-uni" data-filter="team" data-val="統一獅" style="color:#FF6600">統一獅</div>
       <div class="chip chip-lt" data-filter="team" data-val="樂天桃猿" style="color:#7D001A">樂天桃猿</div>
-    </div>
-    <div class="filter-row filter-row2">
       <div class="chip chip-bm" data-filter="special" data-val="bm">🏛️ 理監事</div>
       <div class="chip chip-um" data-filter="special" data-val="um">📋 工會會員</div>
       <div class="chip chip-coach" data-filter="special" data-val="coach">📢 含教練</div>
-      <div class="chip chip-noag" data-filter="special" data-val="noag">🤝 無經紀公司</div>
+      <div class="chip chip-foreign active" data-filter="foreign">🌏 含外籍</div>
+      <div class="chip chip-noag" data-filter="special" data-val="noag">🤝 無經紀</div>
     </div>
   </div>
   <div class="result-count" id="resultCount"></div>
@@ -217,6 +215,7 @@ const BOARD_ROLES = ['理事長','副理事長','理事','候補理事','常務�
 
 let filterTeam = '';
 let filterSpecials = new Set();
+let filterForeign = true;
 
 function calcAge(bdStr) {
   if (!bdStr) return '';
@@ -242,6 +241,9 @@ document.querySelectorAll('.chip').forEach(c => {
       c.classList.add('active');
       c.style.color = '';
       filterTeam = val;
+    } else if (ft === 'foreign') {
+      filterForeign = !filterForeign;
+      c.classList.toggle('active', filterForeign);
     } else if (ft === 'special') {
       const was = c.classList.contains('active');
       document.querySelectorAll('[data-filter=special]').forEach(x => x.classList.remove('active'));
@@ -272,6 +274,7 @@ function getFiltered() {
     if (filterTeam && p.t !== filterTeam) return false;
     if (filterSpecials.has('bm') && !BOARD_ROLES.includes(p.bm)) return false;
     if (filterSpecials.has('um') && p.um !== '會員') return false;
+    if (!filterForeign && p.fc === '外籍') return false;
     if (filterSpecials.has('noag') && p.ag) return false;
     if (q) {
       const fields = [p.n, p.no, p.pos, p.ag, p.eth, p.bm].join(' ').toLowerCase();
