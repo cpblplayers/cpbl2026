@@ -55,7 +55,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 
 /* big number on top-right */
 .card-num{position:absolute;top:8px;right:14px;font-size:26px;font-weight:900;opacity:.13;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
-.card-num-badge{position:absolute;top:8px;right:10px;font-size:16px;font-weight:900;color:#fff;background:#222;padding:3px 9px;border-radius:10px;letter-spacing:-.5px;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.card-logo-badge{position:absolute;top:8px;right:10px;width:38px;height:38px;object-fit:contain}
 
 .card-name{font-size:18px;font-weight:800;line-height:1.2;padding-right:60px}
 .card-org{font-size:12px;color:#888;font-weight:400;margin-top:1px}
@@ -209,7 +209,14 @@ const TODAY = new Date();
 
 const TEAM_CLASS = {'中信兄弟':'ctb','台鋼雄鷹':'tsg','味全龍':'ww','富邦悍將':'fb','統一獅':'uni','樂天桃猿':'lt'};
 const TEAM_COLOR = {'中信兄弟':'#FFD100','台鋼雄鷹':'#004B23','味全龍':'#CD2027','富邦悍將':'#0047AB','統一獅':'#FF6600','樂天桃猿':'#7D001A'};
-const TEAM_LOGO = {'中信兄弟':'logo_brothers.png','台鋼雄鷹':'logo_tsg.png','味全龍':'logo_dragon.png','富邦悍將':'logo_fubon.png','統一獅':'logo_lions.png','樂天桃猿':'logo_rakuten.png'};
+const TEAM_LOGO = {
+  '中信兄弟':'https://www.cpbl.com.tw/files/file_pool/1/0l109765754453009797/logo_brothers.png',
+  '台鋼雄鷹':'https://www.cpbl.com.tw/files/file_pool/1/0n255385839510091777/tsg-logo0912.png',
+  '味全龍':'https://www.cpbl.com.tw/files/file_pool/1/0l109765752096404797/logo_dragon.png',
+  '富邦悍將':'https://www.cpbl.com.tw/files/file_pool/1/0l109765753631383724/logo_fubon.png',
+  '統一獅':'https://www.cpbl.com.tw/files/file_pool/1/0l109765753819131779/logo_lions.png',
+  '樂天桃猿':'https://www.cpbl.com.tw/files/file_pool/1/0o012549940550727932/2024_cpbl%e5%85%ad%e9%9a%8alogo_r2_%e5%ae%98%e7%b6%b2.png'
+};
 // Text color for inactive chips (readable on white)
 const TEAM_TEXT = {'中信兄弟':'#8B6F00','台鋼雄鷹':'#004B23','味全龍':'#CD2027','富邦悍將':'#0047AB','統一獅':'#FF6600','樂天桃猿':'#7D001A'};
 const BOARD_ROLES = ['理事長','副理事長','理事','候補理事','常務監事','監事','候補監事'];
@@ -304,9 +311,10 @@ function render() {
     const age = calcAge(p.bd);
     const noStr = p.no || '—';
 
+    const logoFile = TEAM_LOGO[p.t];
     let teamBadge = isCoach
       ? `<span class="badge badge-coach">教練</span>`
-      : `<span class="badge badge-team badge-${tc}">${p.t}</span>`;
+      : logoFile ? `<img src="${logoFile}" alt="${p.t}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;background:#111;vertical-align:middle">` : '';
     let levelBadge = (!isCoach && p.lv) ? `<span class="badge badge-${p.lv === '一軍' ? 'l1' : 'l2'}">${p.lv}</span>` : '';
     let posBadge = p.pos ? `<span class="badge badge-pos">${p.pos}</span>` : '';
     let bmBadge = isBM ? `<span class="badge badge-bm">${p.bm}</span>` : '';
@@ -318,10 +326,11 @@ function render() {
     if (age) bottom += `<span>🎂 <b>${age}</b></span>`;
     if (p.ag) bottom += `<span>🤝 ${p.ag}</span>`;
 
+    const logoBadge = logoFile ? `<img class="card-logo-badge" src="${logoFile}" alt="${p.t}">` : '';
     return `<div class="card t-${tc}" onclick="showDetail(${idx},getFiltered())">
-      <div class="card-num-badge">#${noStr}</div>
-      <div class="card-name">${p.n}</div>
-      <div class="card-mid">${teamBadge}${levelBadge}${posBadge}${bmBadge}${umBadge}${fgnBadge}${ethBadge}</div>
+      ${logoBadge}
+      <div class="card-name">${p.n}<span style="font-size:12px;font-weight:800;color:#fff;background:#333;padding:2px 7px;border-radius:8px;margin-left:8px;letter-spacing:.5px">#${noStr}</span></div>
+      <div class="card-mid">${levelBadge}${posBadge}${bmBadge}${umBadge}${fgnBadge}${ethBadge}</div>
       ${bottom ? `<div class="card-bottom">${bottom}</div>` : ''}
     </div>`;
   }).join('');
@@ -434,20 +443,25 @@ function buildReport() {
     return `<tr class="${cls}">
       <td><span class="bm-role-badge ${cls}">${p.bm}</span></td>
       <td style="font-weight:700">${p.n}</td>
-      <td><span class="team-dot" style="background:${tc}"></span>${p.t}</td>
+      <td>${TEAM_LOGO[p.t] ? `<img src="${TEAM_LOGO[p.t]}" alt="${p.t}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;background:#111;vertical-align:middle">` : p.t}</td>
       <td style="color:#888">${p.lv || ''}</td>
     </tr>`;
   }).join('');
 
-  const maxAgent = AGENT_STATS[0].cnt;
-  const agentRows = AGENT_STATS.slice(0,15).map(a => {
-    const barW = Math.round(a.cnt / maxAgent * 100);
-    return `<tr>
-      <td style="max-width:130px;word-break:break-all">${a.ag}</td>
-      <td style="font-weight:700;color:#4e9af1;width:32px">${a.cnt}</td>
-      <td style="width:80px"><span class="bar" style="width:${barW}%"></span></td>
-    </tr>`;
+  // 經紀公司 × 各隊交叉統計（排除外籍、教練、無經紀）
+  const TEAMS = ['中信兄弟','台鋼雄鷹','味全龍','富邦悍將','統一獅','樂天桃猿'];
+  const agMap = {};
+  players.filter(p => p.ag && p.fc !== '外籍').forEach(p => {
+    if (!agMap[p.ag]) agMap[p.ag] = {total:0};
+    agMap[p.ag].total++;
+    agMap[p.ag][p.t] = (agMap[p.ag][p.t] || 0) + 1;
+  });
+  const agSorted = Object.entries(agMap).sort((a,b) => b[1].total - a[1].total).slice(0,15);
+  const agentRows = agSorted.map(([ag, data]) => {
+    const teamCells = TEAMS.map(t => `<td style="text-align:center;color:${data[t] ? TEAM_COLOR[t] : '#ddd'};font-weight:${data[t]?'700':'400'}">${data[t] || '—'}</td>`).join('');
+    return `<tr><td style="font-size:12px;max-width:110px;word-break:break-all">${ag}</td><td style="font-weight:700;color:#4e9af1;text-align:center">${data.total}</td>${teamCells}</tr>`;
   }).join('');
+  const agTeamLogos = TEAMS.map(t => `<th style="text-align:center;padding:4px 2px"><img src="${TEAM_LOGO[t]}" alt="${t}" style="width:24px;height:24px;object-fit:contain"></th>`).join('');
 
   document.getElementById('reportContent').innerHTML = `
     <div><div class="section-title">📊 整體概況</div>
@@ -469,12 +483,11 @@ function buildReport() {
         <thead><tr><th style="width:90px">職稱</th><th>姓名</th><th>球隊</th><th>軍別</th></tr></thead>
         <tbody>${bmTableRows}</tbody>
       </table></div></div>
-    <div><div class="section-title">🤝 經紀公司排行（前15）</div>
-      <div class="table-card"><table class="tbl">
-        <thead><tr><th>經紀公司</th><th>人數</th><th></th></tr></thead>
+    <div><div class="section-title">🤝 經紀公司 × 各隊（前15，本土球員）</div>
+      <div class="table-card" style="overflow-x:auto"><table class="tbl">
+        <thead><tr><th>經紀公司</th><th style="text-align:center">合計</th>${agTeamLogos}</tr></thead>
         <tbody>${agentRows}</tbody>
-      </table><div style="font-size:11px;color:#aaa;margin-top:8px">* 共 373 筆有效記錄</div>
-      </div></div>`;
+      </table></div></div>`;
 }
 
 // ── 動態更新 ──
