@@ -508,7 +508,7 @@ function fetchLive() {
       PLAYERS.length = 0;
       data.forEach(p => PLAYERS.push(p));
       render();
-      if (currentPage === 'report') buildReport();
+      if (!document.getElementById('pageReport').classList.contains('hidden')) buildReport();
       const now = new Date();
       const ts  = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
       status.textContent = `✅ 已更新 ${ts}（${data.length} 筆）`;
