@@ -37,6 +37,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 .chip-coach.active{background:#78716c}
 .chip-foreign.active{background:#be185d}
 .chip-noag.active{background:#d97706}
+.chip-nonmember.active{background:#555}
 
 
 .result-count{padding:6px 14px;font-size:12px;color:#666;background:#f2f4f7}
@@ -168,6 +169,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
       <div class="chip chip-coach" data-filter="special" data-val="coach">📢 含教練</div>
       <div class="chip chip-foreign active" data-filter="foreign">🌏 含外籍</div>
       <div class="chip chip-noag" data-filter="special" data-val="noag">🤝 無經紀</div>
+      <div class="chip chip-nonmember" data-filter="special" data-val="nonmember">🚫 非會員</div>
     </div>
   </div>
   <div class="result-count" id="resultCount"></div>
@@ -284,6 +286,7 @@ function getFiltered() {
     if (filterSpecials.has('um') && p.um !== '會員') return false;
     if (!filterForeign && p.fc === '外籍') return false;
     if (filterSpecials.has('noag') && p.ag) return false;
+    if (filterSpecials.has('nonmember') && p.bm !== '非會員') return false;
     if (q) {
       const fields = [p.n, p.no, p.pos, p.ag, p.eth, p.bm].join(' ').toLowerCase();
       if (!fields.includes(q)) return false;
@@ -317,7 +320,10 @@ function render() {
       : logoFile ? `<img src="${logoFile}" alt="${p.t}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;background:#111;vertical-align:middle">` : '';
     let levelBadge = (!isCoach && p.lv) ? `<span class="badge badge-${p.lv === '一軍' ? 'l1' : 'l2'}">${p.lv}</span>` : '';
     let posBadge = p.pos ? `<span class="badge badge-pos">${p.pos}</span>` : '';
-    let bmBadge = p.bm ? `<span class="badge badge-bm">${p.bm}</span>` : '';
+    const bmStyle = p.bm === '非會員'
+      ? 'font-size:12px;font-weight:800;color:#777;background:#333;padding:2px 8px;border-radius:8px;margin-left:14px;letter-spacing:.3px'
+      : 'font-size:12px;font-weight:800;color:#c084fc;background:#3b0764;padding:2px 8px;border-radius:8px;margin-left:14px;letter-spacing:.3px';
+    let bmBadge = p.bm ? `<span style="${bmStyle}">${p.bm}</span>` : '';
     let fgnBadge = isForeign ? `<span class="badge badge-fgn">外籍</span>` : '';
     let ethBadge = hasEth ? `<span class="badge badge-eth">${p.eth}</span>` : '';
     let ageBadge = age ? `<span style="font-size:11px;color:#94a3b8;margin-right:2px">🎂 <b>${age}</b></span>` : '';
