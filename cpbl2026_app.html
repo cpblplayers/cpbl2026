@@ -95,6 +95,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 .drawer-name{font-size:24px;font-weight:900;margin-bottom:3px}
 .drawer-sub{font-size:13px;color:#888;margin-bottom:14px}
 .drawer-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px}
+.drawer-hero{width:100%;height:150px;border-radius:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:relative;overflow:hidden}
+.drawer-hero .hero-bg-logo{position:absolute;right:-10px;bottom:-10px;width:130px;height:130px;object-fit:contain;opacity:.18}
+.drawer-hero .hero-left{position:relative;z-index:1}
+.drawer-hero .hero-no{font-size:54px;font-weight:900;color:#fff;line-height:1;opacity:.9;letter-spacing:-1px}
+.drawer-hero .hero-name{font-size:18px;font-weight:800;color:#fff;margin-top:4px;text-shadow:0 1px 4px rgba(0,0,0,.3)}
+.drawer-hero .hero-team{font-size:12px;color:rgba(255,255,255,.75);margin-top:2px}
+.drawer-hero .hero-logo{position:relative;z-index:1;width:60px;height:60px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.25))}
 .drawer-rows{display:flex;flex-direction:column;gap:11px}
 .drawer-row{display:flex;gap:10px;font-size:14px;border-bottom:1px solid #f4f5f7;padding-bottom:10px}
 .drawer-row:last-child{border-bottom:none}
@@ -317,13 +324,11 @@ function render() {
     const logoFile = TEAM_LOGO[p.t];
     let teamBadge = isCoach
       ? `<span class="badge badge-coach">教練</span>`
-      : logoFile ? `<img src="${logoFile}" alt="${p.t}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;background:#111;vertical-align:middle">` : '';
+      : logoFile ? `<img src="${logoFile}" alt="${p.t}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;vertical-align:middle">` : '';
     let levelBadge = (!isCoach && p.lv) ? `<span class="badge badge-${p.lv === '一軍' ? 'l1' : 'l2'}">${p.lv}</span>` : '';
     let posBadge = p.pos ? `<span class="badge badge-pos">${p.pos}</span>` : '';
-    const bmStyle = p.bm === '非會員'
-      ? 'font-size:12px;font-weight:800;color:#777;background:#333;padding:2px 8px;border-radius:8px;margin-left:14px;letter-spacing:.3px'
-      : 'font-size:12px;font-weight:800;color:#c084fc;background:#3b0764;padding:2px 8px;border-radius:8px;margin-left:14px;letter-spacing:.3px';
-    let bmBadge = p.bm ? `<span style="${bmStyle}">${p.bm}</span>` : '';
+    const bmStyle = 'font-size:12px;font-weight:800;color:#fff;background:#7c3aed;padding:2px 8px;border-radius:8px;margin-left:14px;letter-spacing:.3px';
+    let bmBadge = (p.bm && p.bm !== '非會員') ? `<span style="${bmStyle}">${p.bm}</span>` : '';
     let fgnBadge = isForeign ? `<span class="badge badge-fgn">外籍</span>` : '';
     let ethBadge = hasEth ? `<span class="badge badge-eth">${p.eth}</span>` : '';
     let ageBadge = age ? `<span style="font-size:11px;color:#94a3b8;margin-right:2px">🎂 <b>${age}</b></span>` : '';
@@ -371,9 +376,19 @@ function showDetail(idx, filtered) {
   const rows = fields.map(f =>
     `<div class="drawer-row"><span class="drawer-label">${f[0]}</span><span class="drawer-val">${f[1]}</span></div>`
   ).join('');
+  const heroColor = TEAM_COLOR[p.t] || '#4e9af1';
+  const heroLogo = TEAM_LOGO[p.t] || '';
+  const heroNoDisplay = p.no ? p.no.replace('#','') : '—';
+  const heroHtml = `<div class="drawer-hero" style="background:linear-gradient(135deg,${heroColor}dd 0%,${heroColor}88 100%)">
+    <div class="hero-left">
+      <div class="hero-no">${heroNoDisplay}</div>
+      <div class="hero-name">${p.n}</div>
+      <div class="hero-team">${p.t}${p.lv ? ' · '+p.lv : ''}</div>
+    </div>
+    ${heroLogo ? `<img class="hero-logo" src="${heroLogo}" alt="${p.t}"><img class="hero-bg-logo" src="${heroLogo}" alt="">` : ''}
+  </div>`;
   document.getElementById('drawerContent').innerHTML = `
-    <div class="drawer-num">${p.no || ''}</div>
-    <div class="drawer-name">${p.n}</div>
+    ${heroHtml}
     <div class="drawer-badges">${badges}</div>
     <div class="drawer-rows">${rows}</div>`;
   document.getElementById('drawerOverlay').classList.add('open');
@@ -444,7 +459,7 @@ function buildReport() {
     return `<tr class="${cls}">
       <td><span class="bm-role-badge ${cls}">${p.bm}</span></td>
       <td style="font-weight:700">${p.n}</td>
-      <td>${TEAM_LOGO[p.t] ? `<img src="${TEAM_LOGO[p.t]}" alt="${p.t}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;background:#111;vertical-align:middle">` : p.t}</td>
+      <td>${TEAM_LOGO[p.t] ? `<img src="${TEAM_LOGO[p.t]}" alt="${p.t}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;vertical-align:middle">` : p.t}</td>
       <td style="color:#888">${p.lv || ''}</td>
     </tr>`;
   }).join('');
