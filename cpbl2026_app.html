@@ -317,21 +317,17 @@ function render() {
       : logoFile ? `<img src="${logoFile}" alt="${p.t}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;background:#111;vertical-align:middle">` : '';
     let levelBadge = (!isCoach && p.lv) ? `<span class="badge badge-${p.lv === '一軍' ? 'l1' : 'l2'}">${p.lv}</span>` : '';
     let posBadge = p.pos ? `<span class="badge badge-pos">${p.pos}</span>` : '';
-    let bmBadge = isBM ? `<span class="badge badge-bm">${p.bm}</span>` : '';
-    let umBadge = isUM ? `<span class="badge badge-um">工會會員</span>` : '';
+    let bmBadge = p.bm ? `<span class="badge badge-bm">${p.bm}</span>` : '';
     let fgnBadge = isForeign ? `<span class="badge badge-fgn">外籍</span>` : '';
     let ethBadge = hasEth ? `<span class="badge badge-eth">${p.eth}</span>` : '';
-
-    let bottom = '';
-    if (age) bottom += `<span>🎂 <b>${age}</b></span>`;
-    if (p.ag) bottom += `<span>🤝 ${p.ag}</span>`;
+    let ageBadge = age ? `<span style="font-size:11px;color:#94a3b8;margin-right:2px">🎂 <b>${age}</b></span>` : '';
+    let agBadge = p.ag ? `<span style="font-size:11px;color:#94a3b8;margin-left:2px">🤝 ${p.ag}</span>` : '';
 
     const logoBadge = logoFile ? `<img class="card-logo-badge" src="${logoFile}" alt="${p.t}">` : '';
     return `<div class="card t-${tc}" onclick="showDetail(${idx},getFiltered())">
       ${logoBadge}
-      <div class="card-name">${p.n}<span style="font-size:12px;font-weight:800;color:#fff;background:#333;padding:2px 7px;border-radius:8px;margin-left:8px;letter-spacing:.5px">${noStr}</span></div>
-      <div class="card-mid">${levelBadge}${posBadge}${bmBadge}${umBadge}${fgnBadge}${ethBadge}</div>
-      ${bottom ? `<div class="card-bottom">${bottom}</div>` : ''}
+      <div class="card-name">${p.n}<span style="font-size:12px;font-weight:800;color:#fff;background:#333;padding:2px 7px;border-radius:8px;margin-left:8px;letter-spacing:.5px">${noStr}</span>${bmBadge}</div>
+      <div class="card-mid">${ageBadge}${levelBadge}${posBadge}${fgnBadge}${ethBadge}${agBadge}</div>
     </div>`;
   }).join('');
   list.innerHTML = html;
@@ -359,8 +355,8 @@ function showDetail(idx, filtered) {
   const bdDisplay = p.bd ? `${p.bd}${age ? '　' + age : ''}` : '—';
   const fields = [
     ['背號', p.no || '—'],
+    ['理監事', p.bm || '—'],
     ['工會會員', p.um || '—'],
-    ['理監事', isBM ? p.bm : '一般會員'],
     ['生日', bdDisplay],
     ['族別', p.eth || '—'],
     ['經紀公司', p.ag || '—'],
@@ -372,7 +368,6 @@ function showDetail(idx, filtered) {
   document.getElementById('drawerContent').innerHTML = `
     <div class="drawer-num">${p.no || ''}</div>
     <div class="drawer-name">${p.n}</div>
-    <div class="drawer-sub">${p.t}${age ? ' · ' + age : ''}${p.lv && !isCoach ? ' · ' + p.lv : ''}${p.pos ? ' · ' + p.pos : ''}</div>
     <div class="drawer-badges">${badges}</div>
     <div class="drawer-rows">${rows}</div>`;
   document.getElementById('drawerOverlay').classList.add('open');
