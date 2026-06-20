@@ -329,7 +329,7 @@ function render() {
     const logoBadge = logoFile ? `<img class="card-logo-badge" src="${logoFile}" alt="${p.t}">` : '';
     return `<div class="card t-${tc}" onclick="showDetail(${idx},getFiltered())">
       ${logoBadge}
-      <div class="card-name">${p.n}<span style="font-size:12px;font-weight:800;color:#fff;background:#333;padding:2px 7px;border-radius:8px;margin-left:8px;letter-spacing:.5px">#${noStr}</span></div>
+      <div class="card-name">${p.n}<span style="font-size:12px;font-weight:800;color:#fff;background:#333;padding:2px 7px;border-radius:8px;margin-left:8px;letter-spacing:.5px">${noStr}</span></div>
       <div class="card-mid">${levelBadge}${posBadge}${bmBadge}${umBadge}${fgnBadge}${ethBadge}</div>
       ${bottom ? `<div class="card-bottom">${bottom}</div>` : ''}
     </div>`;
@@ -359,12 +359,12 @@ function showDetail(idx, filtered) {
   const bdDisplay = p.bd ? `${p.bd}${age ? '　' + age : ''}` : '—';
   const fields = [
     ['背號', p.no || '—'],
+    ['工會會員', p.um || '—'],
+    ['理監事', isBM ? p.bm : '一般會員'],
     ['生日', bdDisplay],
     ['族別', p.eth || '—'],
     ['經紀公司', p.ag || '—'],
     ['月薪', p.sal || '—'],
-    ['工會會員', p.um || '—'],
-    ['理監事', isBM ? p.bm : '一般會員'],
   ];
   const rows = fields.map(f =>
     `<div class="drawer-row"><span class="drawer-label">${f[0]}</span><span class="drawer-val">${f[1]}</span></div>`
@@ -372,7 +372,7 @@ function showDetail(idx, filtered) {
   document.getElementById('drawerContent').innerHTML = `
     <div class="drawer-num">${p.no || ''}</div>
     <div class="drawer-name">${p.n}</div>
-    <div class="drawer-sub">${p.t}${p.lv && !isCoach ? ' · ' + p.lv : ''}${p.pos ? ' · ' + p.pos : ''}</div>
+    <div class="drawer-sub">${p.t}${age ? ' · ' + age : ''}${p.lv && !isCoach ? ' · ' + p.lv : ''}${p.pos ? ' · ' + p.pos : ''}</div>
     <div class="drawer-badges">${badges}</div>
     <div class="drawer-rows">${rows}</div>`;
   document.getElementById('drawerOverlay').classList.add('open');
