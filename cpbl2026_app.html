@@ -449,7 +449,7 @@ function buildReport() {
   }).join('');
 
   // 經紀公司 × 各隊交叉統計（排除外籍、教練、無經紀）
-  const TEAMS = ['中信兄弟','台鋼雄鷹','味全龍','富邦悍將','統一獅','樂天桃猿'];
+  // TEAMS 已在上方宣告
   const agMap = {};
   players.filter(p => p.ag && p.fc !== '外籍').forEach(p => {
     if (!agMap[p.ag]) agMap[p.ag] = {total:0};
