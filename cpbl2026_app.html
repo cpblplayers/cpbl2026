@@ -358,7 +358,7 @@ function showDetail(idx, filtered) {
 
   const bdDisplay = p.bd ? `${p.bd}${age ? '　' + age : ''}` : '—';
   const fields = [
-    ['背號', p.no ? `#${p.no}` : '—'],
+    ['背號', p.no || '—'],
     ['生日', bdDisplay],
     ['族別', p.eth || '—'],
     ['經紀公司', p.ag || '—'],
