@@ -103,6 +103,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 .drawer-hero .hero-team{font-size:12px;color:rgba(255,255,255,.75);margin-top:2px}
 .drawer-hero .hero-logo{position:relative;z-index:1;width:60px;height:60px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.25))}
 .drawer-rows{display:flex;flex-direction:column;gap:11px}
+.drawer-sig{margin-top:18px;text-align:center}
+.drawer-sig a{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#1a73e8,#1558b0);color:#fff;padding:11px 24px;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:.3px;box-shadow:0 2px 8px rgba(26,115,232,.35)}
+.drawer-sig a:active{opacity:.8;transform:scale(.97)}
 .drawer-row{display:flex;gap:10px;font-size:14px;border-bottom:1px solid #f4f5f7;padding-bottom:10px}
 .drawer-row:last-child{border-bottom:none}
 .drawer-label{color:#999;min-width:72px;flex-shrink:0;font-size:12px;padding-top:2px}
@@ -387,10 +390,12 @@ function showDetail(idx, filtered) {
     </div>
     ${heroLogo ? `<img class="hero-logo" src="${heroLogo}" alt="${p.t}"><img class="hero-bg-logo" src="${heroLogo}" alt="">` : ''}
   </div>`;
+  const sigUrl = 'https://www.google.com/search?q=' + encodeURIComponent('職棒' + p.n + '簽名') + '&tbm=isch';
   document.getElementById('drawerContent').innerHTML = `
     ${heroHtml}
     <div class="drawer-badges">${badges}</div>
-    <div class="drawer-rows">${rows}</div>`;
+    <div class="drawer-rows">${rows}</div>
+    <div class="drawer-sig"><a href="${sigUrl}" target="_blank">🔍 搜尋簽名圖片</a></div>`;
   document.getElementById('drawerOverlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
 }
